@@ -5,11 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "obvibe"
 version = "0.1.0"
-description = "A brief description of your project."
 dependencies = [
-    "pybis",
+    "pybis"
 ]
 
-[tool.setuptools]
-py-modules = ["vibing", "keller"]  # Declare individual modules
-package-dir = { "": "src" }
+[project.optional-dependencies]
+dev = ["pytest", "black"]  # Add any dev tools you need
+
+[tool.setuptools.packages.find]
+where = ["src"]
