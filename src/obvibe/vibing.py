@@ -3,6 +3,8 @@ This is the main module for this repository
 """
 
 import pybis
+import os
+from . import keller 
 
 class Identifiers:
     """
@@ -24,3 +26,42 @@ class Identifiers:
     @property
     def experiment_identifier(self) -> str:
         return f"{self.project_identifier}/{self.experiment_code}"
+    
+def push_exp(
+        openbis_object:pybis.Openbis,
+        dir_folder:str,
+        dict_mapping:dict,
+        space_code:str = 'TEST_SPACE_PYBIS',
+        project_code:str = 'TEST_UPLOAD',
+        experiment_type:str = 'Battery_Premise2',
+        
+        
+):  
+    ob = openbis_object
+    list_json = [file for file in os.listdir(dir_folder) if file.endswith(".json")]
+    if len(list_json) != 1:
+        raise ValueError("There should be exactly one json file in the folder")
+    name_json = [file for file in os.listdir(dir_folder) if file.endswith(".json")][0]
+    dir_json = os.path.join(dir_folder, name_json)
+
+    if len(os.path.basename(dir_json).split('.')) != 3:
+        raise ValueError("Not recognized json file name. The recognized file name is cycle.experiment_code.json")
+
+    exp_name = os.path.basename(dir_json).split('.')[1] #Extract the experiment name from the json file name
+    ident = Identifiers(space_code, project_code, experiment_code=exp_name)
+
+    exp =  ob.new_experiment(code=ident.experiment_code, type=experiment_type, project=ident.project_identifier)
+    for item in dict_mapping:
+        try:
+            openbis_code = item['openbis_code']
+            json_path = item['json_path']
+            print(f'Uploading metadata for {openbis_code} from {json_path}')
+            exp.p[openbis_code] = keller.get_metadata_from_json(dir_json, json_path)
+            exp.save()
+        except:
+            print(f'Error uploading metadata for {openbis_code} from {json_path}')
+            continue
+
+    
+
+    
