@@ -9,8 +9,5 @@ dependencies = [
     "pybis"
 ]
 
-[project.optional-dependencies]
-dev = ["pytest", "black"]  # Add any dev tools you need
-
 [tool.setuptools.packages.find]
 where = ["src"]
