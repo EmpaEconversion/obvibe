@@ -4,7 +4,7 @@ This is the main module for this repository
 
 import pybis
 import os
-from . import keller 
+from . import keller, pathfolio
 
 class Identifiers:
     """
@@ -30,7 +30,7 @@ class Identifiers:
 def push_exp(
         openbis_object:pybis.Openbis,
         dir_folder:str,
-        dict_mapping:dict,
+        dict_mapping:dict=pathfolio.metadata_mapping,
         space_code:str = 'TEST_SPACE_PYBIS',
         project_code:str = 'TEST_UPLOAD',
         experiment_type:str = 'Battery_Premise2',
