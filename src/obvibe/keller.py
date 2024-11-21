@@ -3,6 +3,8 @@ This module contain an axiliary functions
 """
 
 import pybis
+from typing import Union
+import json
 
 def make_new_property(
     openbis_object: pybis.Openbis,
@@ -65,5 +67,26 @@ def get_open_bis_obj(dir_pat: str,
     ob = pybis.Openbis(url)
     ob.set_token(token)
     return ob
+
+def get_metadata_from_json(dir_json: str, path: str) -> Union[str, float]:
+    """
+    Get the metadata from a JSON file.
+
+    Parameters:
+    dir_json (str): The directory of the JSON file.
+    path (str): The path to the metadata. 
+
+    Returns:
+    info: The metadata.
+    """
+    with open(dir_json, 'r') as f:
+        json_file = json.load(f)
+    
+    info = json_file
+    for key in path.split('||'):
+        info = info[key]
+    return info
+
+    
 
     
