@@ -46,4 +46,24 @@ def make_new_property(
 
     # Assign the newly created property to the collection type
     collection_type.assign_property(new_property_code)
+
+def get_open_bis_obj(dir_pat: str,
+                     url: str = r'https://openbis-empa-lab501.ethz.ch/'
+                     ) -> pybis.Openbis:
+    """
+    Get the openbis object from PAT.
+
+    Parameters:
+    dir_pat (str): The directory of the PAT file.
+    url (str, optional): The URL of the openBIS server. Defaults to r'https://openbis-empa-lab501.ethz.ch/'.
+
+    ReturnS:
+    pybis.Openbis: The openbis object.
+    """
+    with open(dir_pat, 'r') as f:
+        token = f.read().strip()
+    ob = pybis.Openbis(url)
+    ob.set_token(token)
+    return ob
+
     
