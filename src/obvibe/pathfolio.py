@@ -1,7 +1,7 @@
 """
 This module contains dictionary used to link between system.
 """
-
+#This list of dictionary is used to map the metadata from the analyzed json file to the openbis code
 metadata_mapping = [
     {
         "metadata": "Sample ID",
@@ -159,3 +159,18 @@ metadata_mapping = [
         "openbis_code": "spacer_mm"
     }
 ]
+
+# This dictionary is used to map between the metadata column in the excelf or ontology and the path in analyzed json file. 
+dict_excel_to_json = data_dict = {
+    "Cell ID": "metadata||sample_data||Sample ID",
+    "Separator manufacturer": "metadata||sample_data||Separator",
+    "Electrolyte manufacturer": "metadata||sample_data||Electrolyte name",
+    "Negative electrode coating active material": "metadata||sample_data||Anode type",
+    "Negative electrode diameter": "metadata||sample_data||Anode diameter (mm)",
+    "Negative electrode coating active material mass fraction": "metadata||sample_data||Anode active material mass fraction",
+    "Positive electrode coating active material": "metadata||sample_data||Cathode type",
+    "Positive electrode diameter": "metadata||sample_data||Cathode diameter (mm)",
+    "Positive electrode coating active material mass fraction": "metadata||sample_data||Cathode active material mass fraction",
+    "Cell case": "metadata||sample_data||Casing type",
+    "Separator diameter": "metadata||sample_data||Separator diameter (mm)"
+}
