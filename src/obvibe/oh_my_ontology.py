@@ -128,7 +128,7 @@ def curate_metadata_dict(dir_json: str) -> Dict[str, str]:
         raise ValueError(f"Date extarcted from the cell ID {unformatted_date_string} is not in the correct format of yymmdd, please check the format")
     return dict_metadata
 
-def gen_jsonld(dir_xlsx: str, dir_jsonld_folder: str, jsonld_filename: str) -> None:
+def gen_jsonld(dir_xlsx: str,  jsonld_filename: str, dir_jsonld_folder: str = r'K:\Aurora\nukorn_PREMISE_space\Backup for jsonld') -> None:
     """
     Generate a JSON-LD file from a metadata Excel file.
 
