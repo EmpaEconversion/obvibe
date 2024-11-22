@@ -91,6 +91,16 @@ def push_exp(
     ds_analyzed_json.data = dir_json
     ds_analyzed_json.upload_dataset()
 
+    #Raw data json
+    list_raw_json = [file for file in os.listdir(dir_folder) if file.endswith(".json.gz") and file.split('.')[1] == exp_name]
+    if len(list_raw_json) != 1:
+        raise ValueError("There should be exactly one raw_json file in the folder")
+    dir_raw_json = os.path.join(dir_folder, list_raw_json[0])
+    ds_raw_json = Dataset(ob, ident=ident)
+    ds_raw_json.type = 'premise_cucumber_raw_json'
+    ds_raw_json.data = dir_raw_json
+    ds_raw_json.upload_dataset()
+
 
     
 
