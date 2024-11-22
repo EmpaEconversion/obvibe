@@ -4,7 +4,9 @@ This module contains function desgined to handle ontology xlsx file generation a
 
 from openpyxl import load_workbook
 import os
-import shutil 
+import shutil
+from datetime import datetime 
+from typing import Dict
 from . import pathfolio, keller
 
 def update_metadata_value(file_path, metadata, input_value, sheet_name="Schema"):
@@ -64,15 +66,22 @@ def gen_blank_metadata_xlsx(experiment_name: str,
     # Copy the template file
     shutil.copy(dir_template, dir_new_xlsx)
 
-def curate_metadata_dict(dir_json: str):
+def curate_metadata_dict(dir_json: str) -> Dict[str, str]:
     """
-    This function is used to come generate a dictionary that contain a metadata item and its value 
-
-    This metadata will be used to fill an Excel file that will be used to generate an ontologized JSON-LD file.
+    Generates a metadata dictionary by extracting relevant information from a JSON file.
     
+    This metadata is used to populate an Excel file that will later generate an 
+    ontologized JSON-LD file for further use.
 
     Args:
-        dir_json (str): The directory of the analyzed JSON file.
+        dir_json (str): The file path to the JSON file that contains the analyzed metadata.
+
+    Returns:
+        Dict[str, str]: A dictionary containing metadata items as keys and their corresponding values.
+
+    Raises:
+        ValueError: If the operator's short name is not recognized or if the date format in the 
+                    'Cell ID' field does not follow the expected 'yymmdd' format.
     """
     dict_metadata = {}
 
@@ -80,5 +89,30 @@ def curate_metadata_dict(dir_json: str):
     for key, value in pathfolio.dict_excel_to_json.items():
         dict_metadata[key] = keller.get_metadata_from_json(dir_json, value)
 
+    #Extracting operator name
+    user_short_name = dict_metadata['Cell ID'].split('_')[1]
+    match user_short_name:
+        case 'kigr':
+            user_full_name = 'Graham Kimbell'
+        case 'sefe':
+            user_full_name = 'Enea Svaluto-Ferro'
+        case 'resa':
+            user_full_name = 'Sanja Renka'
+        case 'lisc':
+            user_full_name = 'Lina Sofie Scholz'
+        case 'maal':
+            user_full_name = 'Alan Matiatos'
+        case _:
+            raise ValueError(f"{user_short_name} is not recognized, please consult with Graham Kimbell")
+    dict_metadata['Scientist/technician/operator'] = user_full_name
+
+    #Extracting the date of the experiment
+    try:
+        unformatted_date_string = dict_metadata['Cell ID'].split('_')[0]
+        parsed_date = datetime.strptime(unformatted_date_string, '%y%m%d')
+        formatted_date_string = parsed_date.strftime('%d/%m/%Y')
+        dict_metadata['Date of cell assembly'] = formatted_date_string
+    except:
+        raise ValueError(f"Date extarcted from the cell ID {unformatted_date_string} is not in the correct format of yymmdd, please check the format")
     return dict_metadata
 
