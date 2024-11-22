@@ -29,19 +29,18 @@ class Identifiers:
     
 class Dataset:
     """
-    Class made to faciliate dataset upload
+    Class made to facilitate dataset upload
     """
-    ident = None
-
-    def __init__(self, openbis_instance, dataset_type=None, upload_data=None,) -> None:
+    def __init__(self, openbis_instance, ident: Identifiers, dataset_type=None, upload_data=None) -> None:
         self.ob = openbis_instance
+        self.ident = ident
         self.type = dataset_type
         self.data = upload_data
-        self.experiment = Dataset.ident.experiment_identifier
+        self.experiment = self.ident.experiment_identifier.upper()  # Use the provided Identifiers instance
 
     def upload_dataset(self):
         """
-        Upload the dataset to the openbis
+        Upload the dataset to the openBIS
         """
         self.ob.new_dataset(type=self.type, experiment=self.experiment, file=self.data).save()
 
@@ -85,13 +84,13 @@ def push_exp(
             continue
 
     # Upload the dataset
-    Dataset.ident = ident
-    # Analyzed json file
-    ds_analyzed_json = Dataset(ob)
+
+    #Analyzed JSON
+    ds_analyzed_json = Dataset(ob, ident=ident)
     ds_analyzed_json.type = 'premise_cucumber_analyzed_json'
     ds_analyzed_json.data = dir_json
-    ds_analyzed_json.experiment = '/TEST_SPACE_PYBIS/TEST_UPLOAD/240906_KIGR_GEN4_01'
     ds_analyzed_json.upload_dataset()
+
 
     
 
