@@ -44,11 +44,13 @@ def update_metadata_value(file_path, metadata, input_value, sheet_name="Schema")
     except Exception as e:
         print(f"An error occurred: {e}")
 
-def gen_blank_metadata_xlsx(experiment_name: str, 
+def gen_metadata_xlsx(dir_json: str, 
                             dir_template: str = r"K:\Aurora\nukorn_PREMISE_space\Battinfo_template.xlsx"):
     """
-    Generate a blank metadata Excel file for a specific experiment based on a template.
+    Generate a metadata Excel file for a specific experiment based on a template.
 
+    After generating this metadata file, the script will automatically extract the metadata information form the analyzed json file and automatcailly update the 
+    metadata values in the new Excel file.
     This Excel file will then be used as a metadata excel file used in generating a corresponding ontologized JSON-LD file. 
 
     Args:
@@ -59,12 +61,20 @@ def gen_blank_metadata_xlsx(experiment_name: str,
     Returns:
         None: Creates a new Excel file in the backup directory with the experiment name as part of the file name.
     """
+    # Extract the experiment name from the analyzed json file path. 
+    experiment_name = os.path.basename(dir_json).split('.')[1]
     # Get the name of the new xlsx file
     new_xlsx_name = f"{experiment_name}_excel_for_ontology.xlsx"
     dir_xlsx_folder = r"K:\Aurora\nukorn_PREMISE_space\Backup for ontologized xlsx"
     dir_new_xlsx = os.path.join(dir_xlsx_folder, new_xlsx_name)
     # Copy the template file
     shutil.copy(dir_template, dir_new_xlsx)
+
+    # Update the experiment name in the new Excel file
+    dict_metadata = curate_metadata_dict(dir_json)
+    for key, value in dict_metadata.items():
+        update_metadata_value(dir_new_xlsx, key, value)
+    
 
 def curate_metadata_dict(dir_json: str) -> Dict[str, str]:
     """
@@ -115,4 +125,6 @@ def curate_metadata_dict(dir_json: str) -> Dict[str, str]:
     except:
         raise ValueError(f"Date extarcted from the cell ID {unformatted_date_string} is not in the correct format of yymmdd, please check the format")
     return dict_metadata
+
+
 
