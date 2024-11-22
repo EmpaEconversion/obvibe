@@ -4,7 +4,7 @@ This is the main module for this repository
 
 import pybis
 import os
-from . import keller, pathfolio
+from . import keller, pathfolio, oh_my_ontology
 
 class Identifiers:
     """
@@ -44,8 +44,7 @@ class Dataset:
         """
         self.ob.new_dataset(type=self.type, experiment=self.experiment, file=self.data).save()
 
-    
-    
+
 def push_exp(
         openbis_object:pybis.Openbis,
         dir_folder:str,
@@ -53,9 +52,9 @@ def push_exp(
         space_code:str = 'TEST_SPACE_PYBIS',
         project_code:str = 'TEST_UPLOAD',
         experiment_type:str = 'Battery_Premise2',
-        
-        
-):  
+        ontologize_metadata:bool = True,
+        dir_metadata_excel:str = r"K:\Aurora\nukorn_PREMISE_space\Backup for ontologized xlsx",
+)-> None:
     ob = openbis_object
     list_json = [file for file in os.listdir(dir_folder) if file.endswith(".json")]
     if len(list_json) != 1:
@@ -100,6 +99,19 @@ def push_exp(
     ds_raw_json.type = 'premise_cucumber_raw_json'
     ds_raw_json.data = dir_raw_json
     ds_raw_json.upload_dataset()
+
+    #Ontologize the metadata. Create a new Excel file with the metadata and save it in the backup directory.
+    #Create the corresponding ontologized JSON-LD file.
+    if ontologize_metadata:
+        oh_my_ontology.gen_metadata_xlsx(dir_json)
+
+        #Upload the metadata Excel file to the openBIS
+        ds_metadata_excel = Dataset(ob, ident=ident)
+        ds_metadata_excel.type = 'premise_excel_for_ontology'
+        ds_metadata_excel.data = os.path.join(dir_metadata_excel, f"{exp_name}_excel_for_ontology.xlsx")
+        ds_metadata_excel.upload_dataset()
+        
+        
 
 
     
