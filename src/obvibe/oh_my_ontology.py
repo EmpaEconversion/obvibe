@@ -5,6 +5,7 @@ This module contains function desgined to handle ontology xlsx file generation a
 from openpyxl import load_workbook
 import os
 import shutil 
+from . import pathfolio, keller
 
 def update_metadata_value(file_path, metadata, input_value, sheet_name="Schema"):
     """
@@ -62,3 +63,22 @@ def gen_blank_metadata_xlsx(experiment_name: str,
     dir_new_xlsx = os.path.join(dir_xlsx_folder, new_xlsx_name)
     # Copy the template file
     shutil.copy(dir_template, dir_new_xlsx)
+
+def curate_metadata_dict(dir_json: str):
+    """
+    This function is used to come generate a dictionary that contain a metadata item and its value 
+
+    This metadata will be used to fill an Excel file that will be used to generate an ontologized JSON-LD file.
+    
+
+    Args:
+        dir_json (str): The directory of the analyzed JSON file.
+    """
+    dict_metadata = {}
+
+    #Extract metadata from the analyzed json file. 
+    for key, value in pathfolio.dict_excel_to_json.items():
+        dict_metadata[key] = keller.get_metadata_from_json(dir_json, value)
+
+    return dict_metadata
+
