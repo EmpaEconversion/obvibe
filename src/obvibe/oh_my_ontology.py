@@ -57,7 +57,7 @@ def gen_blank_metadata_xlsx(experiment_name: str,
         None: Creates a new Excel file in the backup directory with the experiment name as part of the file name.
     """
     # Get the name of the new xlsx file
-    new_xlsx_name = f"{experiment_name}_xlsx_for_ontology.xlsx"
+    new_xlsx_name = f"{experiment_name}_excel_for_ontology.xlsx"
     dir_xlsx_folder = r"K:\Aurora\nukorn_PREMISE_space\Backup for ontologized xlsx"
     dir_new_xlsx = os.path.join(dir_xlsx_folder, new_xlsx_name)
     # Copy the template file
