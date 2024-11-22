@@ -49,7 +49,7 @@ def make_new_property(
     # Assign the newly created property to the collection type
     collection_type.assign_property(new_property_code)
 
-def get_open_bis_obj(dir_pat: str,
+def get_openbis_obj(dir_pat: str,
                      url: str = r'https://openbis-empa-lab501.ethz.ch/'
                      ) -> pybis.Openbis:
     """
