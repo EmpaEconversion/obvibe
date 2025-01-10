@@ -106,7 +106,7 @@ def curate_metadata_dict(dir_json: str) -> Dict[str, str]:
     match user_short_name:
         case 'kigr':
             user_full_name = 'Graham Kimbell'
-        case 'sefe':
+        case 'svfe':
             user_full_name = 'Enea Svaluto-Ferro'
         case 'resa':
             user_full_name = 'Sanja Renka'
@@ -115,7 +115,7 @@ def curate_metadata_dict(dir_json: str) -> Dict[str, str]:
         case 'maal':
             user_full_name = 'Alan Matiatos'
         case _:
-            raise ValueError(f"{user_short_name} is not recognized, please consult with Graham Kimbell")
+            raise ValueError(f"{user_short_name} is not recognized, please consult with Graham Kimbell. He will be delighthed to assit you.")
     dict_metadata['Scientist/technician/operator'] = user_full_name
 
     #Extracting the date of the experiment
