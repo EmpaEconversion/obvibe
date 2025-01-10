@@ -140,8 +140,3 @@ def gen_jsonld(dir_xlsx: str,  jsonld_filename: str, dir_jsonld_folder: str = r'
 
     with open(jsonld_filepath, 'w') as f:
         f.write(jsonld_str)
-
-
-
-
-
