@@ -103,20 +103,15 @@ def curate_metadata_dict(dir_json: str) -> Dict[str, str]:
 
     #Extracting operator name
     user_short_name = dict_metadata['Cell ID'].split('_')[1]
-    match user_short_name:
-        case 'kigr':
-            user_full_name = 'Graham Kimbell'
-        case 'svfe':
-            user_full_name = 'Enea Svaluto-Ferro'
-        case 'resa':
-            user_full_name = 'Sanja Renka'
-        case 'lisc':
-            user_full_name = 'Lina Sofie Scholz'
-        case 'maal':
-            user_full_name = 'Alan Matiatos'
-        case _:
-            raise ValueError(f"{user_short_name} is not recognized, please consult with Graham Kimbell. He will be delighthed to assit you.")
+    user_full_name = pathfolio.user_mapping.get(user_short_name)
+
+    if user_full_name is None:
+        raise ValueError(
+            f"{user_short_name} is not recognized, please consult with Graham Kimbell. He will be delighted to assist you."
+        )
+
     dict_metadata['Scientist/technician/operator'] = user_full_name
+
 
     #Extracting the date of the experiment
     try:
