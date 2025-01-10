@@ -6,7 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "obvibe"
 version = "0.1.0"
 dependencies = [
-    "pybis"
+    "pybis",
+    "openpyxl"
 ]
 
 [tool.setuptools.packages.find]
