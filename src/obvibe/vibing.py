@@ -85,21 +85,21 @@ def push_exp(
 
     # Upload the dataset
 
-    #Analyzed JSON
+    #Analyzed data
     ds_analyzed_json = Dataset(ob, ident=ident)
-    ds_analyzed_json.type = 'premise_cucumber_analyzed_json'
+    ds_analyzed_json.type = 'premise_cucumber_analyzed_battery_data'
     ds_analyzed_json.data = dir_json
     ds_analyzed_json.upload_dataset()
 
-    #Raw data json
-    list_raw_json = [file for file in os.listdir(dir_folder) if file.endswith(".json.gz") and file.split('.')[1] == exp_name]
-    if len(list_raw_json) != 1:
-        raise ValueError("There should be exactly one raw_json file in the folder")
-    dir_raw_json = os.path.join(dir_folder, list_raw_json[0])
-    ds_raw_json = Dataset(ob, ident=ident)
-    ds_raw_json.type = 'premise_cucumber_raw_json'
-    ds_raw_json.data = dir_raw_json
-    ds_raw_json.upload_dataset()
+    #Raw data 
+    list_raw_data = [file for file in os.listdir(dir_folder) if file.endswith(".h5") and file.split('.')[1] == exp_name]
+    if len(list_raw_data) != 1:
+        raise ValueError("There should be exactly one raw_h5 file in the folder")
+    dir_raw_json = os.path.join(dir_folder, list_raw_data[0])
+    ds_raw_data = Dataset(ob, ident=ident)
+    ds_raw_data.type = 'premise_cucumber_raw_battery_data'
+    ds_raw_data.data = dir_raw_json
+    ds_raw_data.upload_dataset()
 
     #Ontologize the metadata. Create a new Excel file with the metadata and save it in the backup directory.
     #Create the corresponding ontologized JSON-LD file.
