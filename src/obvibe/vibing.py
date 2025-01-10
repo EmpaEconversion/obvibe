@@ -56,6 +56,31 @@ def push_exp(
         dir_metadata_excel:str = r"K:\Aurora\nukorn_PREMISE_space\Backup for ontologized xlsx",
         dir_jsonld_folder: str = r'K:\Aurora\nukorn_PREMISE_space\Backup for jsonld'
 )-> None:
+    """
+Pushes experimental data and metadata from a local folder to an openBIS instance.
+
+This function automates the process of creating a new experiment in openBIS, 
+uploading metadata, analyzed data, raw data, and optionally ontologizing the metadata.
+
+Args:
+    openbis_object (pybis.Openbis): An openBIS instance object for connecting to the openBIS server.
+    dir_folder (str): Path to the directory containing the experimental data files.
+    dict_mapping (dict, optional): A mapping dictionary defining openBIS codes and JSON paths for metadata extraction. Defaults to `pathfolio.metadata_mapping`.
+    space_code (str, optional): The openBIS space code where the experiment will be created. Defaults to 'TEST_SPACE_PYBIS'.
+    project_code (str, optional): The openBIS project code where the experiment will be created. Defaults to 'TEST_UPLOAD'.
+    experiment_type (str, optional): The type of experiment to be created in openBIS. Defaults to 'Battery_Premise2'.
+    ontologize_metadata (bool, optional): If True, generates an ontologized JSON-LD file and corresponding Excel metadata file. Defaults to True.
+    dir_metadata_excel (str, optional): Directory where the ontologized Excel metadata file will be saved. 
+    dir_jsonld_folder (str, optional): Directory where the ontologized JSON-LD file will be saved. 
+
+Raises:
+    ValueError: If there is not exactly one JSON file in the specified folder.
+    ValueError: If the JSON file name does not follow the required naming convention.
+    ValueError: If there is not exactly one raw HDF5 file in the specified folder.
+
+Returns:
+    None
+"""
     ob = openbis_object
     list_json = [file for file in os.listdir(dir_folder) if file.endswith(".json")]
     if len(list_json) != 1:
