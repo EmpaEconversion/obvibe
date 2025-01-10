@@ -12,8 +12,10 @@ import numpy as np
 import datetime
 import traceback
 import inspect
+from pandas import DataFrame
+from typing import Any, Optional
 
-APP_VERSION = "0.8.0"
+APP_VERSION = "1.0.0"
 
 @dataclass
 class ExcelContainer:
@@ -30,7 +32,7 @@ class ExcelContainer:
             "unique_id": pd.read_excel(excel_data, 'Unique ID')
         }
 
-def get_information_value(df, row_to_look: str, col_to_look: str = "Value", col_to_match: str = "Metadata") -> str | None:
+def get_information_value(df: DataFrame, row_to_look: str, col_to_look: str = "Value", col_to_match: str = "Metadata") -> str | None:
     """
     Retrieves the value from a specified column where a different column matches a given value.
 
@@ -49,7 +51,24 @@ def get_information_value(df, row_to_look: str, col_to_look: str = "Value", col_
     return result.iloc[0] if not result.empty else None
 
 
-def create_jsonld_with_conditions(data_container: ExcelContainer):
+def create_jsonld_with_conditions(data_container: ExcelContainer) -> dict:
+    """
+    Creates a JSON-LD structure based on the provided data container containing schema and context information.
+
+    This function extracts necessary information from the schema and context sheets of the provided
+    `ExcelContainer` to generate a JSON-LD object. It performs validation on required fields, handles
+    ontology links, and structures data in compliance with the EMMO domain for battery context.
+
+    Args:
+        data_container (ExcelContainer): A datalcass container with data extracted from the input Excel schema required for generating JSON-LD,
+            including schema, context, and unique identifiers.
+
+    Returns:
+        dict: A JSON-LD dictionary representing the structured information derived from the input data.
+
+    Raises:
+        ValueError: If required fields are missing or have invalid data in the schema or unique ID sheets.
+    """
     schema = data_container.data['schema']
     context_toplevel = data_container.data['context_toplevel']
     context_connector = data_container.data['context_connector']
@@ -90,7 +109,7 @@ def create_jsonld_with_conditions(data_container: ExcelContainer):
         "@context": ["https://w3id.org/emmo/domain/battery/context", {}],
         "@type": dict_harvested_info['Cell type'],
         "schema:version": get_information_value(df=schema, row_to_look='BattINFO CoinCellSchema version'),
-        "schemas:productID": dict_harvested_info['Cell ID'],
+        "schema:productID": dict_harvested_info['Cell ID'],
         "schema:dateCreated": dict_harvested_info['Date of cell assembly'],
         "schema:creator": {
                             "@type": "schema:Person",
@@ -114,16 +133,46 @@ def create_jsonld_with_conditions(data_container: ExcelContainer):
         if pd.isna(row['Value']) or row['Ontology link'] == 'NotOntologize':
             continue
         if row['Ontology link'] == 'Comment':
-            jsonld["rdfs:comment"][row['Metadata']] = row['Value']
+            jsonld["rdfs:comment"] = f"{row['Metadata']}: {row['Value']}"
             continue
-        if pd.isna(row['Unit']):
-            raise ValueError(f"The value '{row['Value']}' is filled in the wrong row, please check the schema")
 
         ontology_path = row['Ontology link'].split('-')
-        add_to_structure(jsonld, ontology_path, row['Value'], row['Unit'], data_container)
-    jsonld["rdfs:comment"]["BattINFO Converter version"] = APP_VERSION
-    jsonld["rdfs:comment"]["Software credit"] = f"This JSON-LD was created using Battconverter (https://battinfoconverter.streamlit.app/) version: {APP_VERSION} and the schema version: {jsonld['schema:version']}, this web application was developed at Empa, Swiss Federal Laboratories for Materials Science and Technology in the Laboratory Materials for Energy Conversion lab"
 
+        # Handle schema:productID specifically
+        if 'schema:productID' in row['Ontology link']:
+            product_id = str(row['Value']).strip()  # Ensure the value is treated as a string
+            # Explicitly assign the value to avoid issues with add_to_structure
+            current = jsonld
+            for key in ontology_path[:-1]:
+                if key not in current:
+                    current[key] = {}
+                current = current[key]
+            current[ontology_path[-1]] = product_id
+            continue
+
+        # Handle schema:manufacturer entries
+        if 'schema:manufacturer' in row['Ontology link']:
+            manufacturer_entry = {
+                "@type": "schema:Organization",
+                "schema:name": row['Value']
+            }
+            # Add manufacturer entry to the structure
+            if ontology_path[0] not in jsonld:
+                jsonld[ontology_path[0]] = {}
+            jsonld[ontology_path[0]]["schema:manufacturer"] = manufacturer_entry
+            continue
+
+        # Default behavior for other entries
+        if pd.isna(row['Unit']):
+            raise ValueError(
+                f"The value '{row['Value']}' is filled in the wrong row, please check the schema"
+            )
+        add_to_structure(jsonld, ontology_path, row['Value'], row['Unit'], data_container)
+
+
+    jsonld["rdfs:comment"] = f"BattINFO Converter version: {APP_VERSION}"
+    jsonld["rdfs:comment"] = f"Software credit: This JSON-LD was created using BattINFO converter (https://battinfoconverter.streamlit.app/) version: {APP_VERSION} and the coin cell battery schema version: {jsonld['schema:version']}, this web application was developed at Empa, Swiss Federal Laboratories for Materials Science and Technology in the Laboratory Materials for Energy Conversion"
+    
     return jsonld
 
 def convert_excel_to_jsonld(excel_file: ExcelContainer):
@@ -138,20 +187,59 @@ def convert_excel_to_jsonld(excel_file: ExcelContainer):
 
     return jsonld_output
 
-def add_to_structure(jsonld, path, value, unit, data_container):
+def add_to_structure(jsonld: dict, path: list[str], value: Any, unit: str, data_container: 'ExcelContainer') -> None:
+    """
+    Adds a value to a JSON-LD structure at a specified path, incorporating units and other contextual information.
+
+    This function processes a path to traverse or modify the JSON-LD structure and handles special cases like 
+    measured properties, ontology links, and unique identifiers. It uses data from the provided `ExcelContainer` 
+    to resolve unit mappings and context connectors.
+
+    Args:
+        jsonld (dict): The JSON-LD structure to modify.
+        path (list[str]): A list of strings representing the hierarchical path in the JSON-LD where the value should be added.
+        value (any): The value to be inserted at the specified path.
+        unit (str): The unit associated with the value. If 'No Unit', the value is treated as unitless.
+        data_container (ExcelContainer): An instance of the `ExcelContainer` dataclass (from son_convert module) containing supporting data 
+                                         for unit mappings, connectors, and unique identifiers.
+
+    Returns:
+        None: This function modifies the JSON-LD structure in place.
+
+    Raises:
+        ValueError: If the value is invalid, a required unit is missing, or an error occurs during path processing.
+        RuntimeError: If any unexpected error arises while processing the value and path.
+    """
     try:
-        print('               ') # To add space between each Excel row - for debugging.
+        print('               ')  # Debug separator
         current_level = jsonld
         unit_map = data_container.data['unit_map'].set_index('Item').to_dict(orient='index')
         context_connector = data_container.data['context_connector']
         connectors = set(context_connector['Item'])
         unique_id = data_container.data['unique_id']
 
+        # Skip processing if value is invalid
+        if not value or pd.isna(value):
+            print(f"Skipping empty value for path: {path}")
+            return
+
         for idx, parts in enumerate(path):
             if len(parts.split('|')) == 1:
                 part = parts
                 special_command = None
                 plf(value, part)
+
+            elif "type|" in parts:
+                # Handle "type|" special command
+                _, type_value = parts.split('|', 1)
+                plf(value, type_value)
+
+                # Assign type value only if it's valid
+                if type_value:
+                    current_level["@type"] = type_value
+                plf(value, type_value, current_level=current_level)
+                continue
+
             elif len(parts.split('|')) == 2:
                 special_command, part = parts.split('|')
                 plf(value, part)
@@ -160,161 +248,60 @@ def add_to_structure(jsonld, path, value, unit, data_container):
                     if "@reverse" not in current_level:
                         plf(value, part)
                         current_level["@reverse"] = {}
-                    current_level = current_level["@reverse"] ; plf(value, part)
-                if special_command == "type":
-                    plf(value, part)                   
-                    current_level['type'] = part ; plf(value, part, current_level=current_level)
-                    parts = parts[idx + 1] ; plf(value, part, current_level=current_level)
-                    idx += 1 ; plf(value, part, current_level=current_level)
-                    continue
+                    current_level = current_level["@reverse"]
+                    plf(value, part)
+
             else:
                 raise ValueError(f"Invalid JSON-LD at: {parts} in {path}")
-            
+
             is_last = idx == len(path) - 1
             is_second_last = idx == len(path) - 2
 
             if part not in current_level:
-                plf(value, part)
-                if part in connectors:
+                if value or unit:  # Only add the part if value or unit exists
                     plf(value, part)
-                    connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
-                    if pd.isna(connector_type):
-                        plf(value, part)
-                        current_level[part] = {}
-                    else:
-                        plf(value, part)
-                        current_level[part] = {"@type": connector_type}
-                else:
-                    plf(value, part)
-                    current_level[part] = {}
-            
-            #Handle the case of the single path.
-            if len(path) == 1 and unit == 'No Unit':
-                plf(value, part)
-                if value in unique_id['Item'].values:
-                    plf(value, part)
-                    if "@type" in current_level:
-                        plf(value, part)
-                        if "@type" in current_level[part] and isinstance(current_level[part]["@type"], list):
-                            plf(value, part)
-                            if not pd.isna(value):
-                                plf(value, part)
-                                current_level[part]["@type"].append(value)
+                    if part in connectors:
+                        connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
+                        if pd.isna(connector_type):
+                            current_level[part] = {}
                         else:
-                            plf(value, part)
-                            if not pd.isna(value):
-                                plf(value, part)
-                                current_level[part]["@type"] = [value]
+                            current_level[part] = {"@type": connector_type}
                     else:
-                        plf(value, part)
-                        if not pd.isna(value):
-                            plf(value, part)
-                            current_level[part]["@type"] = value
-                else:
-                    plf(value, part)
-                    current_level[part]['rdfs:comment'] = value
-                break
+                        current_level[part] = {}
 
+            # Handle unit-based measured properties
             if is_second_last and unit != 'No Unit':
-                plf(value, part)
                 if pd.isna(unit):
-                    plf(value, part)
-                    raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schema")
-                unit_info = unit_map[unit] ; plf(value, part)
-
+                    raise ValueError(f"The value '{value}' is missing a valid unit.")
+                unit_info = unit_map.get(unit, {})
                 new_entry = {
                     "@type": path[-1],
                     "hasNumericalPart": {
                         "@type": "emmo:Real",
                         "hasNumericalValue": value
                     },
-                    "hasMeasurementUnit": unit_info['Key']
+                    "hasMeasurementUnit": unit_info.get('Key', 'UnknownUnit')
                 }
-                
-                # Check if the part already exists and should be a list
-                if part in current_level:
-                    plf(value, part)
-                    if isinstance(current_level[part], list):
-                        current_level[part].append(new_entry) ;plf(value, part)
-                    else:
-                        # Ensure we do not overwrite non-dictionary values
-                        existing_entry = current_level[part] ;plf(value, part)
-                        current_level[part] = [existing_entry, new_entry]
+                if isinstance(current_level.get(part), list):
+                    current_level[part].append(new_entry)
                 else:
-                    current_level[part] = [new_entry] ;plf(value, part)
-                
-                # Clean up any empty dictionaries in the list
-                if isinstance(current_level[part], list):
-                    current_level[part] = [item for item in current_level[part] if item != {}] ;plf(value, part)
+                    current_level[part] = new_entry
                 break
 
+            # Handle final value assignment
             if is_last and unit == 'No Unit':
-                plf(value, part)
                 if value in unique_id['Item'].values:
-                    plf(value, part)
-                    if "@type" in current_level:
-                        plf(value, part)
-                        if isinstance(current_level["@type"], list):
-                            plf(value, part)
-                            if not pd.isna(value):
-                                current_level["@type"].append(value) ; plf(value, part)
-                        else:
-                            plf(value, part)
-                            if not pd.isna(value):
-                                current_level["@type"] = [current_level["@type"], value] ; plf(value, part)
-                    else:
-                        if not pd.isna(value):
-                            current_level["@type"] = value ; plf(value, part)
-                else:
-                    current_level['rdfs:comment'] = value ; plf(value, part)
+                    unique_id_of_value = get_information_value(
+                        df=unique_id, row_to_look=value, col_to_look="ID", col_to_match="Item"
+                    )
+                    if not pd.isna(unique_id_of_value):  # Only assign if the ID is valid
+                        current_level["@id"] = unique_id_of_value
+                    current_level["@type"] = value
+                elif value:
+                    current_level["rdfs:comment"] = value
                 break
 
             current_level = current_level[part]
-
-            if not is_last and part in connectors:
-                connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0] ; plf(value, part)
-                if not pd.isna(connector_type):
-                    plf(value, part)
-                    if "@type" not in current_level:
-                        current_level["@type"] = connector_type ; plf(value, part)
-                    elif current_level["@type"] != connector_type:
-                        plf(value, part)
-                        if isinstance(current_level["@type"], list):
-                            plf(value, part)
-                            if connector_type not in current_level["@type"]:
-                                current_level["@type"].append(connector_type) ; plf(value, part)
-                        else:
-                            current_level["@type"] = [current_level["@type"], connector_type] ; plf(value, part)
-
-            if is_second_last and unit == 'No Unit':
-                next_part = path[idx + 1] ; plf(value, part)
-                if isinstance(current_level, dict): 
-                    plf(value, part, current_level=current_level)
-                    if next_part not in current_level:
-                        current_level[next_part] = {} ; plf(value, part)
-                    current_level = current_level[next_part]
-                elif isinstance(current_level, list):
-                    current_level.append({next_part: {}}) ; plf(value, part)
-                    current_level = current_level[-1][next_part]
-
-                if value in unique_id['Item'].values:
-                    unique_id_of_value = get_information_value(df=unique_id, row_to_look=value, col_to_look = "ID", col_to_match="Item") ; plf(value, part)
-                    if not pd.isna(unique_id_of_value):
-                        current_level['@id'] = unique_id_of_value ; plf(value, part)
-                    
-                    if not pd.isna(value):
-                        plf(value, part, current_level=current_level)
-                        if "@type" in current_level:
-                            plf(value, part)
-                            if isinstance(current_level["@type"], list):
-                                current_level["@type"].append(value) ; plf(value, part)
-                            else:
-                                current_level["@type"] = [current_level["@type"], value] ; plf(value, part)
-                        else:
-                            current_level["@type"] = value ; plf(value, part)
-                else:
-                    current_level['rdfs:comment'] = value ; plf(value, part)
-                break
 
     except Exception as e:
         traceback.print_exc()  # Print the full traceback
