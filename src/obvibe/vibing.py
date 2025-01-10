@@ -79,9 +79,10 @@ def push_exp(
             print(f'Uploading metadata for {openbis_code} from {json_path}')
             exp.p[openbis_code] = keller.get_metadata_from_json(dir_json, json_path)
             exp.save()
-        except:
-            print(f'Error uploading metadata for {openbis_code} from {json_path}')
-            continue
+        except Exception as e:
+                print(f'Error uploading metadata for {openbis_code} from {json_path}')
+                print(f'The error message is: {e} \n')
+                continue
 
     # Upload the dataset
 
