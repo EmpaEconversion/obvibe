@@ -46,7 +46,7 @@ class Dataset:
 
 
 def push_exp(
-        openbis_object:pybis.Openbis,
+        dir_pat:str,
         dir_folder:str,
         dict_mapping:dict=pathfolio.metadata_mapping,
         space_code:str = 'TEST_SPACE_PYBIS',
@@ -63,7 +63,7 @@ This function automates the process of creating a new experiment in openBIS,
 uploading metadata, analyzed data, raw data, and optionally ontologizing the metadata.
 
 Args:
-    openbis_object (pybis.Openbis): An openBIS instance object for connecting to the openBIS server.
+    dir_pat (str): Path to the openBIS PAT file (personal access token).
     dir_folder (str): Path to the directory containing the experimental data files.
     dict_mapping (dict, optional): A mapping dictionary defining openBIS codes and JSON paths for metadata extraction. Defaults to `pathfolio.metadata_mapping`.
     space_code (str, optional): The openBIS space code where the experiment will be created. Defaults to 'TEST_SPACE_PYBIS'.
@@ -81,7 +81,7 @@ Raises:
 Returns:
     None
 """
-    ob = openbis_object
+    ob = keller.get_openbis_obj(dir_pat)
     list_json = [file for file in os.listdir(dir_folder) if file.endswith(".json")]
     if len(list_json) != 1:
         raise ValueError("There should be exactly one json file in the folder")
