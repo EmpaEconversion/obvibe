@@ -82,56 +82,56 @@ Raises:
 Returns:
     None
 """
-    ob = keller.get_openbis_obj(dir_pat)
-    list_json = [file for file in os.listdir(dir_folder) if file.endswith(".json")]
-    if len(list_json) != 1:
-        raise ValueError("There should be exactly one json file in the folder")
+    # ob = keller.get_openbis_obj(dir_pat)
+    # list_json = [file for file in os.listdir(dir_folder) if file.endswith(".json")]
+    # if len(list_json) != 1:
+    #     raise ValueError("There should be exactly one json file in the folder")
     name_json = [file for file in os.listdir(dir_folder) if file.endswith(".json")][0]
     dir_json = os.path.join(dir_folder, name_json)
 
-    if len(os.path.basename(dir_json).split('.')) != 3:
-        raise ValueError("Not recognized json file name. The recognized file name is cycle.experiment_code.json")
+    # if len(os.path.basename(dir_json).split('.')) != 3:
+    #     raise ValueError("Not recognized json file name. The recognized file name is cycle.experiment_code.json")
 
     exp_name = os.path.basename(dir_json).split('.')[1] #Extract the experiment name from the json file name
-    ident = Identifiers(space_code, project_code, experiment_code=exp_name)
+    # ident = Identifiers(space_code, project_code, experiment_code=exp_name)
 
-    #Create new experiment in the predefined space and project.
-    exp =  ob.new_experiment(code=ident.experiment_code, type=experiment_type, project=ident.project_identifier)
-    #Itterate through list of metadtata from json file and upload them to the experiment. 
-    for item in dict_mapping:
-        try:
-            openbis_code = item['openbis_code']
-            json_path = item['json_path']
-            print(f'Uploading metadata for {openbis_code} from {json_path}')
-            exp.p[openbis_code] = keller.get_metadata_from_json(dir_json, json_path)
-            exp.save()
-        except Exception as e:
-                print(f'Error uploading metadata for {openbis_code} from {json_path}')
-                print(f'The error message is: {e} \n')
-                continue
+    # #Create new experiment in the predefined space and project.
+    # exp =  ob.new_experiment(code=ident.experiment_code, type=experiment_type, project=ident.project_identifier)
+    # #Itterate through list of metadtata from json file and upload them to the experiment. 
+    # for item in dict_mapping:
+    #     try:
+    #         openbis_code = item['openbis_code']
+    #         json_path = item['json_path']
+    #         print(f'Uploading metadata for {openbis_code} from {json_path}')
+    #         exp.p[openbis_code] = keller.get_metadata_from_json(dir_json, json_path)
+    #         exp.save()
+    #     except Exception as e:
+    #             print(f'Error uploading metadata for {openbis_code} from {json_path}')
+    #             print(f'The error message is: {e} \n')
+    #             continue
 
-    # Upload the dataset
+    # # Upload the dataset
 
-    #Analyzed data
-    ds_analyzed_json = Dataset(ob, ident=ident)
-    ds_analyzed_json.type = 'premise_cucumber_analyzed_battery_data'
-    ds_analyzed_json.data = dir_json
-    ds_analyzed_json.upload_dataset()
+    # #Analyzed data
+    # ds_analyzed_json = Dataset(ob, ident=ident)
+    # ds_analyzed_json.type = 'premise_cucumber_analyzed_battery_data'
+    # ds_analyzed_json.data = dir_json
+    # ds_analyzed_json.upload_dataset()
 
-    #Raw data 
-    list_raw_data = [file for file in os.listdir(dir_folder) if file.endswith(".h5") and file.split('.')[1] == exp_name]
-    if len(list_raw_data) != 1:
-        raise ValueError("There should be exactly one raw_h5 file in the folder")
-    dir_raw_json = os.path.join(dir_folder, list_raw_data[0])
-    ds_raw_data = Dataset(ob, ident=ident)
-    ds_raw_data.type = 'premise_cucumber_raw_battery_data'
-    ds_raw_data.data = dir_raw_json
-    ds_raw_data.upload_dataset()
+    # #Raw data 
+    # list_raw_data = [file for file in os.listdir(dir_folder) if file.endswith(".h5") and file.split('.')[1] == exp_name]
+    # if len(list_raw_data) != 1:
+    #     raise ValueError("There should be exactly one raw_h5 file in the folder")
+    # dir_raw_json = os.path.join(dir_folder, list_raw_data[0])
+    # ds_raw_data = Dataset(ob, ident=ident)
+    # ds_raw_data.type = 'premise_cucumber_raw_battery_data'
+    # ds_raw_data.data = dir_raw_json
+    # ds_raw_data.upload_dataset()
 
-    #Ontologize the metadata. Create a new Excel file with the metadata and save it in the backup directory.
-    #Create the corresponding ontologized JSON-LD file.
-    #     #Generate the metadata Excel file for the specific experiment
-    #     oh_my_ontology.gen_metadata_xlsx(dir_json)
+    # #Ontologize the metadata. Create a new Excel file with the metadata and save it in the backup directory.
+    # #Create the corresponding ontologized JSON-LD file.
+    # #     #Generate the metadata Excel file for the specific experiment
+    # #     oh_my_ontology.gen_metadata_xlsx(dir_json)
 
 
 
@@ -143,25 +143,26 @@ Returns:
         #There is a custom_metadata
         pass
     else:
-        #There is no custom_metadata upoloaded.
-        source_file = Path(dir_folder) / f"{exp_name}_custom_metadata.xlsx"
+        #There is no custom_metadata uploaded.
+        source_file = Path(dir_folder) / f"{exp_name}_automated_extract_metadata.xlsx"
         dest_file = Path(dir_folder) / f"{exp_name}_merged_metadata.xlsx"
+        print(f"Copying {source_file} to {dest_file}")
         shutil.copy(source_file, dest_file)
     
-    #Upload the metadata Excel file to the openBIS
-    dir_metadata_excel = Path(dir_metadata_excel) / f"{exp_name}_merged_metadata.xlsx"
-    ds_metadata_excel = Dataset(ob, ident=ident)
-    ds_metadata_excel.type = 'premise_excel_for_ontology'
-    ds_metadata_excel.data = dir_metadata_excel
-    ds_metadata_excel.upload_dataset()
+    # # #Upload the metadata Excel file to the openBIS
+    # # dir_metadata_excel = Path(dir_metadata_excel) / f"{exp_name}_merged_metadata.xlsx"
+    # # ds_metadata_excel = Dataset(ob, ident=ident)
+    # # ds_metadata_excel.type = 'premise_excel_for_ontology'
+    # # ds_metadata_excel.data = dir_metadata_excel
+    # # ds_metadata_excel.upload_dataset()
 
-    #Generate the ontologized JSON-LD file
-    jsonld_filename = f"ontologized_{exp_name}.json"
-    oh_my_ontology.gen_jsonld(dir_metadata_excel, jsonld_filename)
+    # #Generate the ontologized JSON-LD file
+    # jsonld_filename = f"ontologized_{exp_name}.json"
+    # oh_my_ontology.gen_jsonld(dir_metadata_excel, jsonld_filename)
 
-    #Upload the ontologized JSON-LD file to the openBIS
-    dir_jsonld = Path(dir_folder)/jsonld_filename 
-    ds_jsonld = Dataset(ob, ident=ident)
-    ds_jsonld.type = 'premise_jsonld'
-    ds_jsonld.data = dir_jsonld
-    ds_jsonld.upload_dataset()
+    # #Upload the ontologized JSON-LD file to the openBIS
+    # dir_jsonld = Path(dir_folder)/jsonld_filename 
+    # ds_jsonld = Dataset(ob, ident=ident)
+    # ds_jsonld.type = 'premise_jsonld'
+    # ds_jsonld.data = dir_jsonld
+    # ds_jsonld.upload_dataset()
