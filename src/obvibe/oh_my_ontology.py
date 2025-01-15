@@ -65,11 +65,12 @@ def gen_metadata_xlsx(dir_json: str,
     Returns:
         None: Creates a new Excel file in the backup directory with the experiment name as part of the file name.
     """
-    # Extract the experiment name from the analyzed json file path. 
-    experiment_name = os.path.basename(dir_json).split('.')[1]
+    dir_json = Path(dir_json)
+    # Extract the experiment name from the analyzed JSON file path
+    experiment_name = dir_json.stem.split('.')[1]
     # Get the name of the new xlsx file
     new_xlsx_name = f"{experiment_name}_automated_extract_metadata.xlsx"
-    dir_new_xlsx = os.path.join(dir_json, new_xlsx_name)
+    dir_new_xlsx = dir_json.parent / new_xlsx_name
     # Copy the template file
     shutil.copy(dir_template, dir_new_xlsx)
 
