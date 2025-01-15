@@ -47,7 +47,7 @@ def update_metadata_value(file_path, metadata, input_value, sheet_name="Schema")
 
 def gen_metadata_xlsx(dir_json: str, 
                             dir_template: str = r"K:\Aurora\nukorn_PREMISE_space\Battinfo_template.xlsx",
-                            dir_xlsx_folder: str = r"K:\Aurora\nukorn_PREMISE_space\Backup for ontologized xlsx") -> None:  
+    ) -> None:  
     """
     Generate a metadata Excel file for a specific experiment based on a template.
 
@@ -56,10 +56,10 @@ def gen_metadata_xlsx(dir_json: str,
     This Excel file will then be used as a metadata excel file used in generating a corresponding ontologized JSON-LD file. 
 
     Args:
-        experiment_name (str): The name of the experiment to be used in naming the new Excel file.
+        dir_json (str): The path to the analyzed JSON file.
         dir_template (str): The path to the template Excel file. Defaults to 
                             'K:\\Aurora\\nukorn_PREMISE_space\\Battinfo_template.xlsx'.
-        dir_xlsx_folder (str): The directory where the new Excel file will be saved. Defaults to 'K:\\Aurora\\nukorn_PREMISE_space\\Backup for ontologized xlsx'.
+        
 
     Returns:
         None: Creates a new Excel file in the backup directory with the experiment name as part of the file name.
@@ -67,8 +67,8 @@ def gen_metadata_xlsx(dir_json: str,
     # Extract the experiment name from the analyzed json file path. 
     experiment_name = os.path.basename(dir_json).split('.')[1]
     # Get the name of the new xlsx file
-    new_xlsx_name = f"{experiment_name}_excel_for_ontology.xlsx"
-    dir_new_xlsx = os.path.join(dir_xlsx_folder, new_xlsx_name)
+    new_xlsx_name = f"{experiment_name}_automated_extract_metadata.xlsx"
+    dir_new_xlsx = os.path.join(dir_json, new_xlsx_name)
     # Copy the template file
     shutil.copy(dir_template, dir_new_xlsx)
 
