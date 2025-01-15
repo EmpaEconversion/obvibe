@@ -4,6 +4,7 @@ This module contains function desgined to handle ontology xlsx file generation a
 
 from openpyxl import load_workbook
 import os
+from pathlib import Path
 import shutil
 from datetime import datetime 
 from typing import Dict
@@ -123,20 +124,20 @@ def curate_metadata_dict(dir_json: str) -> Dict[str, str]:
         raise ValueError(f"Date extarcted from the cell ID {unformatted_date_string} is not in the correct format of yymmdd, please check the format")
     return dict_metadata
 
-def gen_jsonld(dir_xlsx: str,  jsonld_filename: str, dir_jsonld_folder: str = r'K:\Aurora\nukorn_PREMISE_space\Backup for jsonld') -> None:
+def gen_jsonld(dir_xlsx: str,  jsonld_filename: str) -> None:
     """
     Generate a JSON-LD file from a metadata Excel file.
 
     Args:
         dir_xlsx (str): The path to the metadata Excel file.
-        dir_jsonld (str): The path to save the JSON-LD file.
+        jsonld_filename (str): The name of the JSON-LD file.
 
     Returns:
         None: Creates a new JSON-LD file in the specified directory.
     """
     json_ld_output = simon_simulator.convert_excel_to_jsonld(dir_xlsx)
     jsonld_str = json.dumps(json_ld_output, indent=4)
-    jsonld_filepath = os.path.join(dir_jsonld_folder, jsonld_filename)
+    jsonld_filepath = Path(dir_xlsx)/jsonld_filename
 
     with open(jsonld_filepath, 'w') as f:
         f.write(jsonld_str)
