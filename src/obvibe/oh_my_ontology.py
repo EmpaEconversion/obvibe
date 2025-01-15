@@ -136,9 +136,10 @@ def gen_jsonld(dir_xlsx: str,  jsonld_filename: str) -> None:
     Returns:
         None: Creates a new JSON-LD file in the specified directory.
     """
+    dir_xlsx = Path(dir_xlsx)
     json_ld_output = simon_simulator.convert_excel_to_jsonld(dir_xlsx)
     jsonld_str = json.dumps(json_ld_output, indent=4)
-    jsonld_filepath = Path(dir_xlsx)/jsonld_filename
+    jsonld_filepath = dir_xlsx.parent/jsonld_filename
 
     with open(jsonld_filepath, 'w') as f:
         f.write(jsonld_str)

@@ -7,6 +7,7 @@ import os
 import shutil
 from pathlib import Path
 from . import keller, pathfolio, oh_my_ontology
+from openpyxl import load_workbook
 
 class Identifiers:
     """
@@ -137,18 +138,45 @@ Returns:
 
     #Create the automated_extract_metadata.xlsx file
     oh_my_ontology.gen_metadata_xlsx(dir_json)
+    source_file = Path(dir_folder) / f"{exp_name}_automated_extract_metadata.xlsx"
+    dest_file = Path(dir_folder) / f"{exp_name}_merged_metadata.xlsx"
+    print(f"Copying {source_file} to {dest_file}")
+    shutil.copy(source_file, dest_file)
 
     #Check if there is already a custom Excel file for the experiemnt. If so, create JSON-LD form it. If not, extract metadata from the analyzed json file and create a new Excel file.
     if any(file.endswith('custom_metadata.xlsx') for file in os.listdir(dir_folder)):
-        #There is a custom_metadata
-        pass
-    else:
-        #There is no custom_metadata uploaded.
-        source_file = Path(dir_folder) / f"{exp_name}_automated_extract_metadata.xlsx"
-        dest_file = Path(dir_folder) / f"{exp_name}_merged_metadata.xlsx"
-        print(f"Copying {source_file} to {dest_file}")
-        shutil.copy(source_file, dest_file)
-    
+        # There is a custom_metadata
+        custom_metadata = Path(dir_folder) / next(file for file in os.listdir(dir_folder) if file.endswith('custom_metadata.xlsx'))
+
+        # Load both Excel files
+        merged_wb = load_workbook(dest_file)
+        custom_wb = load_workbook(custom_metadata)
+
+        # Select the "Schema" sheet from both workbooks
+        merged_sheet = merged_wb["Schema"]
+        custom_sheet = custom_wb["Schema"]
+
+        # Find the "Value" column index in the "Schema" sheet
+        header_row = 1  # Assuming headers are in the first row
+        value_column_index = None
+
+        for col in range(1, custom_sheet.max_column + 1):
+            if custom_sheet.cell(row=header_row, column=col).value == "Value":
+                value_column_index = col
+                break
+
+        if value_column_index is None:
+            raise ValueError("Column 'Value' not found in the 'Schema' sheet.")
+
+        # Loop through rows in the "Value" column of the custom metadata
+        for row in range(header_row + 1, custom_sheet.max_row + 1):  # Skip the header row
+            custom_value = custom_sheet.cell(row=row, column=value_column_index).value
+            if custom_value:  # Skip if the cell is empty or None
+                # Write the custom value into the corresponding row of the merged metadata
+                merged_sheet.cell(row=row, column=value_column_index).value = custom_value
+
+        # Save the updated merged metadata workbook
+        merged_wb.save(dest_file)
     # # #Upload the metadata Excel file to the openBIS
     # # dir_metadata_excel = Path(dir_metadata_excel) / f"{exp_name}_merged_metadata.xlsx"
     # # ds_metadata_excel = Dataset(ob, ident=ident)
@@ -156,9 +184,10 @@ Returns:
     # # ds_metadata_excel.data = dir_metadata_excel
     # # ds_metadata_excel.upload_dataset()
 
-    # #Generate the ontologized JSON-LD file
-    # jsonld_filename = f"ontologized_{exp_name}.json"
-    # oh_my_ontology.gen_jsonld(dir_metadata_excel, jsonld_filename)
+    #Generate the ontologized JSON-LD file
+    jsonld_filename = f"ontologized_{exp_name}.json"
+    dir_xlsx = Path(dir_folder) / f"{exp_name}_merged_metadata.xlsx"
+    oh_my_ontology.gen_jsonld(dir_xlsx, jsonld_filename)
 
     # #Upload the ontologized JSON-LD file to the openBIS
     # dir_jsonld = Path(dir_folder)/jsonld_filename 
