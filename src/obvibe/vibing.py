@@ -4,6 +4,8 @@ This is the main module for this repository
 
 import pybis
 import os
+import shutil
+from pathlib import Path
 from . import keller, pathfolio, oh_my_ontology
 
 class Identifiers:
@@ -52,7 +54,6 @@ def push_exp(
         space_code:str = 'TEST_SPACE_PYBIS',
         project_code:str = 'TEST_UPLOAD',
         experiment_type:str = 'Battery_Premise2',
-        ontologize_metadata:bool = True,
         dir_metadata_excel:str = r"K:\Aurora\nukorn_PREMISE_space\Backup for ontologized xlsx",
         dir_jsonld_folder: str = r'K:\Aurora\nukorn_PREMISE_space\Backup for jsonld'
 )-> None:
@@ -129,33 +130,38 @@ Returns:
 
     #Ontologize the metadata. Create a new Excel file with the metadata and save it in the backup directory.
     #Create the corresponding ontologized JSON-LD file.
-    if ontologize_metadata:
-        #Generate the metadata Excel file for the specific experiment
-        oh_my_ontology.gen_metadata_xlsx(dir_json)
-
-        #Upload the metadata Excel file to the openBIS
-        dir_metadata_excel = os.path.join(dir_metadata_excel, f"{exp_name}_excel_for_ontology.xlsx")
-        ds_metadata_excel = Dataset(ob, ident=ident)
-        ds_metadata_excel.type = 'premise_excel_for_ontology'
-        ds_metadata_excel.data = dir_metadata_excel
-        ds_metadata_excel.upload_dataset()
-
-        #Generate the ontologized JSON-LD file
-        jsonld_filename = f"ontologized_{exp_name}.json"
-        oh_my_ontology.gen_jsonld(dir_metadata_excel, jsonld_filename)
-
-        #Upload the ontologized JSON-LD file to the openBIS
-        dir_jsonld = os.path.join(dir_jsonld_folder, jsonld_filename)
-        ds_jsonld = Dataset(ob, ident=ident)
-        ds_jsonld.type = 'premise_jsonld'
-        ds_jsonld.data = dir_jsonld
-        ds_jsonld.upload_dataset()
-        
-        
+    #     #Generate the metadata Excel file for the specific experiment
+    #     oh_my_ontology.gen_metadata_xlsx(dir_json)
 
 
+
+    #Create the automated_extract_metadata.xlsx file
+    oh_my_ontology.gen_metadata_xlsx(dir_json)
+
+    #Check if there is already a custom Excel file for the experiemnt. If so, create JSON-LD form it. If not, extract metadata from the analyzed json file and create a new Excel file.
+    if any(file.endswith('custom_metadata.xlsx') for file in os.listdir(dir_folder)):
+        #There is a custom_metadata
+        pass
+    else:
+        #There is no custom_metadata upoloaded.
+        source_file = Path(dir_folder) / f"{exp_name}_custom_metadata.xlsx"
+        dest_file = Path(dir_folder) / f"{exp_name}_merged_metadata.xlsx"
+        shutil.copy(source_file, dest_file)
     
+    #Upload the metadata Excel file to the openBIS
+    dir_metadata_excel = Path(dir_metadata_excel) / f"{exp_name}_merged_metadata.xlsx"
+    ds_metadata_excel = Dataset(ob, ident=ident)
+    ds_metadata_excel.type = 'premise_excel_for_ontology'
+    ds_metadata_excel.data = dir_metadata_excel
+    ds_metadata_excel.upload_dataset()
 
-    
+    #Generate the ontologized JSON-LD file
+    jsonld_filename = f"ontologized_{exp_name}.json"
+    oh_my_ontology.gen_jsonld(dir_metadata_excel, jsonld_filename)
 
-    
+    #Upload the ontologized JSON-LD file to the openBIS
+    dir_jsonld = Path(dir_folder)/jsonld_filename 
+    ds_jsonld = Dataset(ob, ident=ident)
+    ds_jsonld.type = 'premise_jsonld'
+    ds_jsonld.data = dir_jsonld
+    ds_jsonld.upload_dataset()
