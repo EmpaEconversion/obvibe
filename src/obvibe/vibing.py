@@ -2,7 +2,6 @@
 This is the main module for this repository
 """
 
-import os
 import shutil
 from pathlib import Path
 from . import keller, pathfolio, oh_my_ontology
