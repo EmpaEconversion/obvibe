@@ -1,0 +1,40 @@
+# Byte-compiled files
+*.py[cod]
+__pycache__/
+
+# Distribution / packaging
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Test-related
+.coverage
+.tox/
+nosetests.xml
+pytest_cache/
+*.cover
+.cache
+
+# Editor/IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Virtual environment
+env/
+venv/
+.env/
+.venv/

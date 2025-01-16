@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "obvibe"
+version = "0.1.0"
+dependencies = [
+    "pybis",
+    "openpyxl"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
