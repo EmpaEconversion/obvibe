@@ -55,8 +55,6 @@ def push_exp(
         space_code:str = 'TEST_SPACE_PYBIS',
         project_code:str = 'TEST_UPLOAD',
         experiment_type:str = 'Battery_Premise2',
-        dir_metadata_excel:str = r"K:\Aurora\nukorn_PREMISE_space\Backup for ontologized xlsx",
-        dir_jsonld_folder: str = r'K:\Aurora\nukorn_PREMISE_space\Backup for jsonld'
 )-> None:
     """
 Pushes experimental data and metadata from a local folder to an openBIS instance.
@@ -82,13 +80,14 @@ Raises:
 
 Returns:
     None
-"""
+""" 
+    dir_folder = Path(dir_folder)
     ob = keller.get_openbis_obj(dir_pat)
     list_json = [file for file in os.listdir(dir_folder) if file.endswith(".json") and not file.startswith('ontologized')]
     if len(list_json) != 1:
         raise ValueError("There should be exactly one json file in the folder")
     name_json = [file for file in os.listdir(dir_folder) if file.endswith(".json")][0]
-    dir_json = os.path.join(dir_folder, name_json)
+    dir_json = dir_folder / name_json
 
     if len(os.path.basename(dir_json).split('.')) != 3:
         raise ValueError("Not recognized json file name. The recognized file name is cycle.experiment_code.json")
@@ -129,24 +128,17 @@ Returns:
     ds_raw_data.data = dir_raw_json
     ds_raw_data.upload_dataset()
 
-    #Ontologize the metadata. Create a new Excel file with the metadata and save it in the backup directory.
-    # Create the corresponding ontologized JSON-LD file.
-    #     #Generate the metadata Excel file for the specific experiment
-    #     oh_my_ontology.gen_metadata_xlsx(dir_json)
-
-
-
     #Create the automated_extract_metadata.xlsx file
     oh_my_ontology.gen_metadata_xlsx(dir_json)
-    source_file = Path(dir_folder) / f"{exp_name}_automated_extract_metadata.xlsx"
-    dest_file = Path(dir_folder) / f"{exp_name}_merged_metadata.xlsx"
+    source_file = dir_folder / f"{exp_name}_automated_extract_metadata.xlsx"
+    dest_file = dir_folder / f"{exp_name}_merged_metadata.xlsx"
     print(f"Copying {source_file} to {dest_file}")
     shutil.copy(source_file, dest_file)
 
     #Check if there is already a custom Excel file for the experiemnt. If so, create JSON-LD form it. If not, extract metadata from the analyzed json file and create a new Excel file.
     if any(file.endswith('custom_metadata.xlsx') for file in os.listdir(dir_folder)):
         # There is a custom_metadata
-        custom_metadata = Path(dir_folder) / next(file for file in os.listdir(dir_folder) if file.endswith('custom_metadata.xlsx'))
+        custom_metadata = dir_folder / next(file for file in os.listdir(dir_folder) if file.endswith('custom_metadata.xlsx'))
 
         # Load both Excel files
         merged_wb = load_workbook(dest_file)
@@ -178,7 +170,7 @@ Returns:
         # Save the updated merged metadata workbook
         merged_wb.save(dest_file)
     #Upload the metadata Excel file to the openBIS
-    dir_metadata_excel = Path(dir_metadata_excel) / f"{exp_name}_merged_metadata.xlsx"
+    dir_metadata_excel = dir_folder / f"{exp_name}_merged_metadata.xlsx"
     ds_metadata_excel = Dataset(ob, ident=ident)
     ds_metadata_excel.type = 'premise_excel_for_ontology'
     ds_metadata_excel.data = dir_metadata_excel
