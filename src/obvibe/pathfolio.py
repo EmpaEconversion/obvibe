@@ -174,12 +174,3 @@ dict_excel_to_json = data_dict = {
     "Cell case": "metadata||sample_data||Casing type",
     "Separator diameter": "metadata||sample_data||Separator diameter (mm)"
 }
-
-# This map the short name of the operator to the full name
-user_mapping = {
-        'kigr': 'Graham Kimbell',
-        'svfe': 'Enea Svaluto-Ferro',
-        'resa': 'Sanja Renka',
-        'lisc': 'Lina Sofie Scholz',
-        'maal': 'Alan Matiatos',
-    }

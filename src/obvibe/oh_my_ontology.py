@@ -46,9 +46,11 @@ def update_metadata_value(file_path, metadata, input_value, sheet_name="Schema")
     except Exception as e:
         print(f"An error occurred: {e}")
 
-def gen_metadata_xlsx(dir_json: str, 
-                            dir_template: str = r"K:\Aurora\nukorn_PREMISE_space\Battinfo_template.xlsx",
-    ) -> None:  
+def gen_metadata_xlsx(
+        dir_json: str,
+        user_mapping: dict = None,
+        dir_template: str = r"K:\Aurora\nukorn_PREMISE_space\Battinfo_template.xlsx",
+    ) -> None:
     """
     Generate a metadata Excel file for a specific experiment based on a template.
 
@@ -60,6 +62,7 @@ def gen_metadata_xlsx(dir_json: str,
         dir_json (str): The path to the analyzed JSON file.
         dir_template (str): The path to the template Excel file. Defaults to 
                             'K:\\Aurora\\nukorn_PREMISE_space\\Battinfo_template.xlsx'.
+        user_mapping (dict, optional): A dictionary mapping user short names to full names.
         
 
     Returns:
@@ -75,12 +78,12 @@ def gen_metadata_xlsx(dir_json: str,
     shutil.copy(dir_template, dir_new_xlsx)
 
     # Update the experiment name in the new Excel file
-    dict_metadata = curate_metadata_dict(dir_json)
+    dict_metadata = curate_metadata_dict(dir_json, user_mapping=user_mapping)
     for key, value in dict_metadata.items():
         update_metadata_value(dir_new_xlsx, key, value)
     
 
-def curate_metadata_dict(dir_json: str) -> Dict[str, str]:
+def curate_metadata_dict(dir_json: str, user_mapping: dict = None) -> Dict[str, str]:
     """
     Generates a metadata dictionary by extracting relevant information from a JSON file.
     
@@ -89,6 +92,7 @@ def curate_metadata_dict(dir_json: str) -> Dict[str, str]:
 
     Args:
         dir_json (str): The file path to the JSON file that contains the analyzed metadata.
+        user_mapping (dict, optional): A dictionary mapping user short names to full names.
 
     Returns:
         Dict[str, str]: A dictionary containing metadata items as keys and their corresponding values.
@@ -105,7 +109,10 @@ def curate_metadata_dict(dir_json: str) -> Dict[str, str]:
 
     #Extracting operator name
     user_short_name = dict_metadata['Cell ID'].split('_')[1]
-    user_full_name = pathfolio.user_mapping.get(user_short_name)
+    if user_mapping:
+        user_full_name = user_mapping.get(user_short_name, user_short_name)
+    else:
+        user_full_name = user_short_name
 
     if user_full_name is None:
         raise ValueError(

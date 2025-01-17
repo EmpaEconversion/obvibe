@@ -49,6 +49,7 @@ class Dataset:
 def push_exp(
         dir_pat: str,
         dir_folder: str,
+        user_mapping: dict = None,
         dict_mapping: dict = pathfolio.metadata_mapping,
         space_code: str = 'TEST_SPACE_PYBIS',
         project_code: str = 'TEST_UPLOAD',
@@ -60,6 +61,7 @@ def push_exp(
     Args:
         dir_pat (str): Path to the openBIS PAT file (personal access token).
         dir_folder (str): Path to the directory containing the experimental data files.
+        user_mapping (dict, optional): A dictionary mapping short name codes to full names.
         dict_mapping (dict, optional): A mapping dictionary defining openBIS codes and JSON paths for metadata extraction. Defaults to `pathfolio.metadata_mapping`.
         space_code (str, optional): The openBIS space code where the experiment will be created. Defaults to 'TEST_SPACE_PYBIS'.
         project_code (str, optional): The openBIS project code where the experiment will be created. Defaults to 'TEST_UPLOAD'.
@@ -125,7 +127,7 @@ def push_exp(
     ds_raw_data.upload_dataset()
 
     # Create the automated_extract_metadata.xlsx file
-    oh_my_ontology.gen_metadata_xlsx(dir_json)
+    oh_my_ontology.gen_metadata_xlsx(dir_json, user_mapping=user_mapping)
     source_file = dir_folder / f"{exp_name}_automated_extract_metadata.xlsx"
     dest_file = dir_folder / f"{exp_name}_merged_metadata.xlsx"
     print(f"Copying {source_file} to {dest_file}")
