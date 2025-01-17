@@ -117,11 +117,6 @@ def curate_metadata_dict(dir_json: str, user_mapping: dict = None) -> Dict[str, 
     else:
         user_full_name = user_short_name
 
-    if user_full_name is None:
-        raise ValueError(
-            f"{user_short_name} is not recognized, please consult with Graham Kimbell. He will be delighted to assist you."
-        )
-
     dict_metadata['Scientist/technician/operator'] = user_full_name
 
 
