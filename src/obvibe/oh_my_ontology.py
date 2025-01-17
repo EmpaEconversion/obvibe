@@ -106,9 +106,9 @@ def curate_metadata_dict(dir_json: str, user_mapping: dict = None) -> Dict[str, 
     with Path(dir_json).open() as f:
         sample_metadata = json.load(f)["metadata"]["sample_data"]
 
-    #Extract metadata from the analyzed json file. 
+    #Extract metadata from the analyzed json file.
     for key, value in pathfolio.dict_excel_to_json.items():
-        dict_metadata[key] = keller.get_metadata_from_json(dir_json, value)
+        dict_metadata[key] = sample_metadata.get(value)
 
     #Extracting operator name
     user_short_name = dict_metadata['Cell ID'].split('_')[1]
