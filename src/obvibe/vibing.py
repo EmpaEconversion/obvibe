@@ -3,6 +3,7 @@ This is the main module for this repository
 """
 
 import shutil
+import json
 from pathlib import Path
 from . import keller, pathfolio, oh_my_ontology
 from openpyxl import load_workbook
@@ -95,15 +96,18 @@ def push_exp(
     exp = ob.new_experiment(code=ident.experiment_code, type=experiment_type, project=ident.project_identifier)
 
     # Iterate through list of metadata from json file and upload them to the experiment.
+    with Path(dir_json).open() as f:
+        sample_metadata = json.load(f)["metadata"]["sample_data"]
+
     for item in dict_mapping:
         try:
+            key = item['metadata']
             openbis_code = item['openbis_code']
-            json_path = item['json_path']
-            print(f'Uploading metadata for {openbis_code} from {json_path}')
-            exp.p[openbis_code] = keller.get_metadata_from_json(dir_json, json_path)
+            print(f'Uploading metadata for {openbis_code} from {key}')
+            exp.p[openbis_code] = sample_metadata.get(key)
             exp.save()
         except Exception as e:
-            print(f'Error uploading metadata for {openbis_code} from {json_path}')
+            print(f'Error uploading metadata for {openbis_code} from {key}')
             print(f'The error message is: {e} \n')
             continue
 
