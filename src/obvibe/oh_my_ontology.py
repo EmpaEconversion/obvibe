@@ -103,6 +103,9 @@ def curate_metadata_dict(dir_json: str, user_mapping: dict = None) -> Dict[str, 
     """
     dict_metadata = {}
 
+    with Path(dir_json).open() as f:
+        sample_metadata = json.load(f)["metadata"]["sample_data"]
+
     #Extract metadata from the analyzed json file. 
     for key, value in pathfolio.dict_excel_to_json.items():
         dict_metadata[key] = keller.get_metadata_from_json(dir_json, value)
@@ -124,12 +127,13 @@ def curate_metadata_dict(dir_json: str, user_mapping: dict = None) -> Dict[str, 
 
     #Extracting the date of the experiment
     try:
-        unformatted_date_string = dict_metadata['Cell ID'].split('_')[0]
-        parsed_date = datetime.strptime(unformatted_date_string, '%y%m%d')
-        formatted_date_string = parsed_date.strftime('%d/%m/%Y')
-        dict_metadata['Date of cell assembly'] = formatted_date_string
+        parsed_date = datetime.strptime(
+            sample_metadata["Timestamp step 10"],
+            "%Y-%m-%d %H:%M:%S",
+        )
+        dict_metadata['Date of cell assembly'] = parsed_date.strftime("%d/%m/%Y")
     except:
-        raise ValueError(f"Date extarcted from the cell ID {unformatted_date_string} is not in the correct format of yymmdd, please check the format")
+        raise ValueError(f"Could not extract datetime from sample {dict_metadata.get('Cell ID', 'Unknown')}")
     return dict_metadata
 
 def gen_jsonld(dir_xlsx: str,  jsonld_filename: str) -> None:
