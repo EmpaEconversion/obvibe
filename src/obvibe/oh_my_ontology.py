@@ -1,25 +1,24 @@
-"""
-This module contains function desgined to handle ontology xlsx file generation and upload
-"""
+"""Functions to handle ontology xlsx file generation and upload."""
+
+import json
+import shutil
+from datetime import datetime
+from pathlib import Path
 
 from openpyxl import load_workbook
-import os
-from pathlib import Path
-import shutil
-from datetime import datetime 
-from typing import Dict
-import json
-from . import pathfolio, keller, simon_simulator 
 
-def update_metadata_value(file_path, metadata, input_value, sheet_name="Schema"):
-    """
-    Update the value of a specified metadata key in an Excel sheet.
+from . import pathfolio, simon_simulator
+
+
+def update_metadata_value(file_path: str, metadata: str, input_value: str, sheet_name: str = "Schema"):
+    """Update the value of a specified metadata key in an Excel sheet.
 
     Args:
         file_path (str): Path to the Excel file.
         metadata (str): The metadata key to search for.
         input_value (str): The new value to set.
         sheet_name (str): Name of the sheet to search in (default is "Schema").
+
     """
     try:
         # Load the workbook and select the specified sheet
@@ -51,26 +50,25 @@ def gen_metadata_xlsx(
         user_mapping: dict = None,
         dir_template: str = r"K:\Aurora\nukorn_PREMISE_space\Battinfo_template.xlsx",
     ) -> None:
-    """
-    Generate a metadata Excel file for a specific experiment based on a template.
+    r"""Generate a metadata Excel file for a specific experiment based on a template.
 
-    After generating this metadata file, the script will automatically extract the metadata information form the analyzed json file and automatcailly update the 
-    metadata values in the new Excel file.
-    This Excel file will then be used as a metadata excel file used in generating a corresponding ontologized JSON-LD file. 
+    After generating this metadata file, the script will automatically extract the metadata information form the
+    analyzed json file and automatcailly update the metadata values in the new Excel file.
+    This Excel file will then be used to generate a corresponding ontologized JSON-LD file.
 
     Args:
         dir_json (str): The path to the analyzed JSON file.
-        dir_template (str): The path to the template Excel file. Defaults to 
+        dir_template (str): The path to the template Excel file. Defaults to
                             'K:\\Aurora\\nukorn_PREMISE_space\\Battinfo_template.xlsx'.
         user_mapping (dict, optional): A dictionary mapping user short names to full names.
-        
 
     Returns:
         None: Creates a new Excel file in the backup directory with the experiment name as part of the file name.
+
     """
     dir_json = Path(dir_json)
     # Extract the experiment name from the analyzed JSON file path
-    experiment_name = dir_json.stem.split('.')[1]
+    experiment_name = dir_json.stem.split(".")[1]
     # Get the name of the new xlsx file
     new_xlsx_name = f"{experiment_name}_automated_extract_metadata.xlsx"
     dir_new_xlsx = dir_json.parent / new_xlsx_name
@@ -81,13 +79,12 @@ def gen_metadata_xlsx(
     dict_metadata = curate_metadata_dict(dir_json, user_mapping=user_mapping)
     for key, value in dict_metadata.items():
         update_metadata_value(dir_new_xlsx, key, value)
-    
 
-def curate_metadata_dict(dir_json: str, user_mapping: dict = None) -> Dict[str, str]:
-    """
-    Generates a metadata dictionary by extracting relevant information from a JSON file.
-    
-    This metadata is used to populate an Excel file that will later generate an 
+
+def curate_metadata_dict(dir_json: str, user_mapping: dict | None = None) -> dict[str, str]:
+    """Generate a metadata dictionary by extracting relevant information from a JSON file.
+
+    This metadata is used to populate an Excel file that will later generate an
     ontologized JSON-LD file for further use.
 
     Args:
@@ -98,8 +95,8 @@ def curate_metadata_dict(dir_json: str, user_mapping: dict = None) -> Dict[str, 
         Dict[str, str]: A dictionary containing metadata items as keys and their corresponding values.
 
     Raises:
-        ValueError: If the operator's short name is not recognized or if the date format in the 
-                    'Cell ID' field does not follow the expected 'yymmdd' format.
+        ValueError: If an assembly date cannot be extracted.
+
     """
     dict_metadata = {}
 
@@ -111,13 +108,10 @@ def curate_metadata_dict(dir_json: str, user_mapping: dict = None) -> Dict[str, 
         dict_metadata[key] = sample_metadata.get(value)
 
     #Extracting operator name
-    user_short_name = dict_metadata['Cell ID'].split('_')[1]
-    if user_mapping:
-        user_full_name = user_mapping.get(user_short_name, user_short_name)
-    else:
-        user_full_name = user_short_name
+    user_short_name = dict_metadata["Cell ID"].split("_")[1]
+    user_full_name = user_mapping.get(user_short_name, user_short_name) if user_mapping else user_short_name
 
-    dict_metadata['Scientist/technician/operator'] = user_full_name
+    dict_metadata["Scientist/technician/operator"] = user_full_name
 
 
     #Extracting the date of the experiment
@@ -126,14 +120,14 @@ def curate_metadata_dict(dir_json: str, user_mapping: dict = None) -> Dict[str, 
             sample_metadata["Timestamp step 10"],
             "%Y-%m-%d %H:%M:%S",
         )
-        dict_metadata['Date of cell assembly'] = parsed_date.strftime("%d/%m/%Y")
+        dict_metadata["Date of cell assembly"] = parsed_date.strftime("%d/%m/%Y")
     except:
-        raise ValueError(f"Could not extract datetime from sample {dict_metadata.get('Cell ID', 'Unknown')}")
+        msg = f"Could not extract datetime from sample {dict_metadata.get('Cell ID', 'Unknown')}"
+        raise ValueError(msg)
     return dict_metadata
 
 def gen_jsonld(dir_xlsx: str,  jsonld_filename: str) -> None:
-    """
-    Generate a JSON-LD file from a metadata Excel file.
+    """Generate a JSON-LD file from a metadata Excel file.
 
     Args:
         dir_xlsx (str): The path to the metadata Excel file.
@@ -141,11 +135,12 @@ def gen_jsonld(dir_xlsx: str,  jsonld_filename: str) -> None:
 
     Returns:
         None: Creates a new JSON-LD file in the specified directory.
+
     """
     dir_xlsx = Path(dir_xlsx)
     json_ld_output = simon_simulator.convert_excel_to_jsonld(dir_xlsx)
     jsonld_str = json.dumps(json_ld_output, indent=4)
     jsonld_filepath = dir_xlsx.parent/jsonld_filename
 
-    with open(jsonld_filepath, 'w') as f:
+    with open(jsonld_filepath, "w") as f:
         f.write(jsonld_str)
