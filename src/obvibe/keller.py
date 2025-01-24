@@ -13,7 +13,7 @@ def make_new_property(
     new_property_label: str,
     new_property_description: str,
     new_property_data_type: str,
-    collection_type_code: str = "battery_premise2",
+    collection_type_code: str = "battery_premise3",
 ) -> None:
     """Create a new property type in openBIS and assign it to a specified collection type.
 
@@ -24,7 +24,7 @@ def make_new_property(
         new_property_description (str): A brief description of the new property type.
         new_property_data_type (str): The data type of the new property (e.g., 'VARCHAR', 'INTEGER').
         collection_type_code (str, optional): The code of the collection type to which the new
-            property will be assigned. Defaults to 'battery_premise2'.
+            property will be assigned. Defaults to 'battery_premise3'.
 
     Returns:
         None
@@ -74,7 +74,7 @@ def get_openbis_obj(dir_pat: str,
 def get_permid_specific_type(
         experiment_name:str,
         dataset_type:str,
-        openbis_obj:str,
+        openbis_obj:pybis.Openbis,
         default_space:str ="/TEST_SPACE_PYBIS/TEST_UPLOAD",
     ) -> str:
     """Retrieve the permId of a dataset of a specific type in a specific experiment.

@@ -55,10 +55,10 @@ def push_exp(
         dir_pat: str,
         dir_folder: str,
         user_mapping: dict | None = None,
-        dict_mapping: dict = pathfolio.metadata_mapping,
+        dict_mapping: dict = pathfolio.dict_json_to_openbis,
         space_code: str = "TEST_SPACE_PYBIS",
         project_code: str = "TEST_UPLOAD",
-        experiment_type: str = "Battery_Premise2",
+        experiment_type: str = "Battery_Premise3",
 ) -> None:
     """Pushes experimental data and metadata from a local folder to an openBIS instance.
 
@@ -66,14 +66,14 @@ def push_exp(
         dir_pat (str): Path to the openBIS PAT file (personal access token).
         dir_folder (str): Path to the directory containing the experimental data files.
         user_mapping (dict, optional): A dictionary mapping short name codes to full names.
-        dict_mapping (dict, optional): A mapping dictionary defining openBIS codes and JSON paths
-            for metadata extraction. Defaults to `pathfolio.metadata_mapping`.
+        dict_mapping (dict, optional): A dictionary mapping JSON keys to openBIS codes
+            for metadata extraction. Defaults to `pathfolio.dict_json_to_openbis`.
         space_code (str, optional): The openBIS space code where the experiment will be created.
             Defaults to 'TEST_SPACE_PYBIS'.
         project_code (str, optional): The openBIS project code where the experiment will be created.
             Defaults to 'TEST_UPLOAD'.
         experiment_type (str, optional): The type of experiment to be created in openBIS. Defaults
-            to 'Battery_Premise2'.
+            to 'Battery_Premise3'.
 
     Raises:
         ValueError: If there is not exactly one JSON file in the specified folder.
@@ -112,15 +112,13 @@ def push_exp(
     with Path(dir_json).open() as f:
         sample_metadata = json.load(f)["metadata"]["sample_data"]
 
-    for item in dict_mapping:
+    for json_key, openbis_code in dict_mapping.items():
         try:
-            key = item["metadata"]
-            openbis_code = item["openbis_code"]
-            print(f"Uploading metadata for {openbis_code} from {key}")
-            exp.p[openbis_code] = sample_metadata.get(key)
+            print(f"Uploading metadata for {openbis_code} from {json_key}")
+            exp.p[openbis_code] = sample_metadata.get(json_key)
             exp.save()
         except Exception as e:
-            print(f"Error uploading metadata for {openbis_code} from {key}")
+            print(f"Error uploading metadata for {openbis_code} from {json_key}")
             print(f"The error message is: {e} \n")
             continue
 
