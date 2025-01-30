@@ -133,7 +133,7 @@ def push_exp(
     # Raw data
     list_raw_data = [
         file for file in dir_folder.iterdir()
-        if file.suffix == ".h5" and file.stem.split(".")[1] == exp_name
+        if file.suffix == ".h5" and file.name.startswith("full.")
     ]
     if len(list_raw_data) != 1:
         msg = "There should be exactly one raw_h5 file in the folder"
